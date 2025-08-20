@@ -4,7 +4,7 @@ package org.example;
 public class Authentication {
     @Autowired
     @Qualifier("emailService")
-    private Service service; // should depend on interface but leave it like that for now until I implement the @Qualifier annotation
+    private Service service;
 
     public void executeAuth() {
         System.out.println("executing auth...");

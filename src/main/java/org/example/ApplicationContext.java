@@ -32,7 +32,21 @@ public class ApplicationContext {
                         if (field.isAnnotationPresent(Qualifier.class)) {
                             dependency = idToInstanceMap.get(field.getAnnotation(Qualifier.class).value());
                         } else {
-                            dependency = instanceMap.get(field.getType());
+                            dependency = instanceMap.get(field.getType()); // should be null in case if I autowired an interface and not a concrete class
+                        }
+                        if (dependency == null) {
+                            if (field.getType().isInterface()) {
+                                boolean flag = false;
+                                for (Object obj : instanceMap.values()) {
+                                    if (field.getType().isAssignableFrom(obj.getClass())) {
+                                        if (flag) {
+                                            throw new IllegalStateException("Duplicate dependency found for field " + field.getName());
+                                        }
+                                        flag = true;
+                                        dependency = obj;
+                                    }
+                                }
+                            }
                         }
                         field.setAccessible(true);
                         field.set(instance, dependency);
