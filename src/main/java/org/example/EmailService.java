@@ -1,6 +1,6 @@
 package org.example;
 
-@Component
+@Component("emailService")
 public class EmailService implements Service{
     @Override
     public void executeService() {

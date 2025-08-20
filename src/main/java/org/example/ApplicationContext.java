@@ -8,6 +8,7 @@ import java.util.*;
 
 public class ApplicationContext {
     private final Map<Class<?>, Object> instanceMap = new HashMap<>();
+    private final Map<String, Object> idToInstanceMap = new HashMap<>();
 
     public ApplicationContext(String packageName) {
         List<Class<?>> candidates = scanPackage(packageName);
@@ -17,14 +18,22 @@ public class ApplicationContext {
                 if (klass.isAnnotationPresent(Component.class)) {
                     Object instance = klass.getDeclaredConstructor().newInstance();
                     instanceMap.put(klass, instance);
+                    if (!klass.getAnnotation(Component.class).value().isBlank()) {
+                        idToInstanceMap.put(klass.getAnnotation(Component.class).value(), instance);
+                    }
                 }
             }
 
             // second, we inject the @Autowired fields of the classes with the appropriate dependencies
             for (Object instance : instanceMap.values()) {
                 for (Field field : instance.getClass().getDeclaredFields()) {
+                    Object dependency = null;
                     if (field.isAnnotationPresent(Autowired.class)) {
-                        Object dependency = instanceMap.get(field.getType());
+                        if (field.isAnnotationPresent(Qualifier.class)) {
+                            dependency = idToInstanceMap.get(field.getAnnotation(Qualifier.class).value());
+                        } else {
+                            dependency = instanceMap.get(field.getType());
+                        }
                         field.setAccessible(true);
                         field.set(instance, dependency);
                     }
